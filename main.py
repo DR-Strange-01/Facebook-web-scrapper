@@ -18,7 +18,7 @@ chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
 
 # Path to ChromeDriver
-CHROME_DRIVER_PATH = r"K:\Setup\chromedriver.exe"  # Ensure this is correct
+CHROME_DRIVER_PATH = r"chromedriver.exe"  # Ensure this is correct
 
 class UsernameInput(BaseModel):
     username: str
