@@ -3,3 +3,4 @@ pydantic
 selenium
 webdriver-manager
 gunicorn
+uvicorn
