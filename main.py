@@ -10,9 +10,21 @@ from webdriver_manager.chrome import ChromeDriverManager
 import os
 import time
 import random
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+origins = [
+    "*",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument('--headless')
@@ -20,21 +32,15 @@ chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
 chrome_options.add_argument('--disable-gpu')
 chrome_options.add_argument('--remote-debugging-port=9222')
-
 # Setting Chrome binary location
 chrome_options.binary_location = os.getenv("GOOGLE_CHROME_BIN", "/app/.chrome-for-testing/chrome-linux64/chrome")
 chrome_driver_path = os.getenv("CHROMEDRIVER_PATH", "/app/.chrome-for-testing/chromedriver-linux64/chromedriver")
-
-
-print(f"Chrome binary location: {chrome_options.binary_location}")
-print(f"ChromeDriver path: {chrome_driver_path}")
 
 class UsernameInput(BaseModel):
     username: str
 
 def initialize_driver():
     try:
-        # Using WebDriver Manager to install ChromeDriver
         service = Service(chrome_driver_path)
         driver = webdriver.Chrome(service=service, options=chrome_options)
         return driver
@@ -64,11 +70,13 @@ def get_subscriber_count(driver):
     except Exception as e:
         return f"Error: {str(e)}"
 
-@app.post("/get_subscriber_count")
-async def get_subscriber_count_api(input_data: UsernameInput):
+@app.api_route("/get_subscriber_count", methods=["GET", "POST"])
+async def get_subscriber_count_api(input_data: UsernameInput = None):
     driver = None
     try:
         driver = initialize_driver()
+        if input_data is None:
+            raise HTTPException(status_code=400, detail="Username is required")
         url = f"https://www.facebook.com/{input_data.username}"
         driver.get(url)
         random_sleep()
