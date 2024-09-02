@@ -22,7 +22,12 @@ chrome_options.add_argument('--disable-gpu')
 chrome_options.add_argument('--remote-debugging-port=9222')
 
 # Setting Chrome binary location
-chrome_options.binary_location = os.environ.get("GOOGLE_CHROME_BIN", "/app/.apt/usr/bin/google-chrome")
+chrome_options.binary_location = os.getenv("GOOGLE_CHROME_BIN", "/app/.apt/usr/bin/google-chrome")
+chrome_driver_path = os.getenv("CHROMEDRIVER_PATH", "/app/.chromedriver/bin/chromedriver")
+
+
+print(f"Chrome binary location: {chrome_options.binary_location}")
+print(f"ChromeDriver path: {chrome_driver_path}")
 
 class UsernameInput(BaseModel):
     username: str
@@ -30,7 +35,7 @@ class UsernameInput(BaseModel):
 def initialize_driver():
     try:
         # Using WebDriver Manager to install ChromeDriver
-        service = Service(os.environ.get("CHROMEDRIVER_PATH", "/app/.chromedriver/bin/chromedriver"))
+         service = Service(chrome_driver_path)
         driver = webdriver.Chrome(service=service, options=chrome_options)
         return driver
     except WebDriverException as e:
@@ -80,3 +85,7 @@ async def get_subscriber_count_api(input_data: UsernameInput):
     finally:
         if driver:
             driver.quit()
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
