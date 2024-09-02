@@ -6,26 +6,31 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, WebDriverException
-from webdriver_manager.chrome import ChromeDriverManager  # Use WebDriver Manager
+from webdriver_manager.chrome import ChromeDriverManager
+import os
 import time
 import random
 
-# Initialize the FastAPI app with the default docs URL
 app = FastAPI()
 
-# Set up Chrome options
+
 chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument('--headless')
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
+chrome_options.add_argument('--disable-gpu')
+chrome_options.add_argument('--remote-debugging-port=9222')
+
+# Setting Chrome binary location
+chrome_options.binary_location = os.environ.get("GOOGLE_CHROME_BIN", "/app/.apt/usr/bin/google-chrome")
 
 class UsernameInput(BaseModel):
     username: str
 
 def initialize_driver():
     try:
-        # Use WebDriver Manager to automatically download the appropriate ChromeDriver
-        service = Service(ChromeDriverManager().install())
+        # Using WebDriver Manager to install ChromeDriver
+        service = Service(os.environ.get("CHROMEDRIVER_PATH", "/app/.chromedriver/bin/chromedriver"))
         driver = webdriver.Chrome(service=service, options=chrome_options)
         return driver
     except WebDriverException as e:
@@ -41,8 +46,7 @@ def handle_popup(driver):
         )
         close_button.click()
     except TimeoutException:
-        # Popup may not be present, so just pass
-        pass
+        pass  # if Popup may not be present
 
 def get_subscriber_count(driver):
     try:
