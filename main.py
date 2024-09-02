@@ -35,7 +35,7 @@ class UsernameInput(BaseModel):
 def initialize_driver():
     try:
         # Using WebDriver Manager to install ChromeDriver
-         service = Service(chrome_driver_path)
+        service = Service(chrome_driver_path)
         driver = webdriver.Chrome(service=service, options=chrome_options)
         return driver
     except WebDriverException as e:
