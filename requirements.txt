@@ -1,0 +1,4 @@
+fastapi
+pydantic
+selenium
+webdriver-manager
