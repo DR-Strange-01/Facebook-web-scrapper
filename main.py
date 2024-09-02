@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 
 origins = [
-    "*",
+    "https://deets.live/",
 ]
 
 app.add_middleware(
@@ -70,7 +70,7 @@ def get_subscriber_count(driver):
     except Exception as e:
         return f"Error: {str(e)}"
 
-@app.api_route("/get_subscriber_count", methods=["GET", "POST"])
+@app.api_route("/get_subscriber_count", methods=["POST"])
 async def get_subscriber_count_api(input_data: UsernameInput = None):
     driver = None
     try:
