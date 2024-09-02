@@ -6,10 +6,12 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, WebDriverException
+from webdriver_manager.chrome import ChromeDriverManager  # Use WebDriver Manager
 import time
 import random
 
-app = FastAPI(docs_url="/facebook_subscriber_count")
+# Initialize the FastAPI app with the default docs URL
+app = FastAPI()
 
 # Set up Chrome options
 chrome_options = webdriver.ChromeOptions()
@@ -17,15 +19,13 @@ chrome_options.add_argument('--headless')
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
 
-# Path to ChromeDriver
-CHROME_DRIVER_PATH = r"chromedriver.exe"  # Ensure this is correct
-
 class UsernameInput(BaseModel):
     username: str
 
 def initialize_driver():
     try:
-        service = Service(CHROME_DRIVER_PATH)
+        # Use WebDriver Manager to automatically download the appropriate ChromeDriver
+        service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=chrome_options)
         return driver
     except WebDriverException as e:
@@ -76,7 +76,3 @@ async def get_subscriber_count_api(input_data: UsernameInput):
     finally:
         if driver:
             driver.quit()
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
