@@ -2,3 +2,4 @@ fastapi
 pydantic
 selenium
 webdriver-manager
+gunicorn
