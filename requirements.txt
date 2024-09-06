@@ -1,4 +1,5 @@
 fastapi
 uvicorn
 webdriver_manager
+selenium
 facebook-page-info-scraper==1.1.4
