@@ -1,95 +1,18 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, WebDriverException
-from webdriver_manager.chrome import ChromeDriverManager
-import os
-import time
-import random
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI
+from facebook_page_info_scraper import FacebookPageInfoScraper
 
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+@app.get("/followers")
+def get_followers(username: str):
+    # Construct the page URL
+    page_url = f'https://www.facebook.com/{username}'
 
-chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument('--headless')
-chrome_options.add_argument('--no-sandbox')
-chrome_options.add_argument('--disable-dev-shm-usage')
-chrome_options.add_argument('--disable-gpu')
-chrome_options.add_argument('--remote-debugging-port=9222')
-# Setting Chrome binary location
-chrome_options.binary_location = os.getenv("GOOGLE_CHROME_BIN", "/app/.chrome-for-testing/chrome-linux64/chrome")
-chrome_driver_path = os.getenv("CHROMEDRIVER_PATH", "/app/.chrome-for-testing/chromedriver-linux64/chromedriver")
+    # Create an instance of the scraper
+    scraper = FacebookPageInfoScraper(link=page_url)
+    page_info = scraper.get_page_info()
 
-class UsernameInput(BaseModel):
-    username: str
+    # Extract only the page followers
+    page_followers = page_info.get('page_followers', 'Data not available')
 
-def initialize_driver():
-    try:
-        service = Service(chrome_driver_path)
-        driver = webdriver.Chrome(service=service, options=chrome_options)
-        return driver
-    except WebDriverException as e:
-        raise HTTPException(status_code=500, detail=f"WebDriver error: {str(e)}")
-
-def random_sleep(min_seconds=2, max_seconds=5):
-    time.sleep(random.uniform(min_seconds, max_seconds))
-
-def handle_popup(driver):
-    try:
-        close_button = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//div[@role='button' and @aria-label='Close']"))
-        )
-        close_button.click()
-    except TimeoutException:
-        pass  # if Popup may not be present
-
-def get_subscriber_count(driver):
-    try:
-        subscriber_element = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//span[contains(@class, 'x193iq5w')]//a[contains(@href, '/followers/')]"))
-        )
-        return subscriber_element.text.split()[0]
-    except TimeoutException:
-        return "N/A"
-    except Exception as e:
-        return f"Error: {str(e)}"
-
-@app.api_route("/get_subscriber_count", methods=["POST"])
-async def get_subscriber_count_api(input_data: UsernameInput = None):
-    driver = None
-    try:
-        driver = initialize_driver()
-        if input_data is None:
-            raise HTTPException(status_code=400, detail="Username is required")
-        url = f"https://www.facebook.com/{input_data.username}"
-        driver.get(url)
-        random_sleep()
-        
-        handle_popup(driver)
-        random_sleep()
-        
-        subscriber_count = get_subscriber_count(driver)
-        return {"subscriber_count": subscriber_count}
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error extracting info: {str(e)}")
-    finally:
-        if driver:
-            driver.quit()
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    return {"page_followers": page_followers}

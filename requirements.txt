@@ -1,6 +1,3 @@
 fastapi
-pydantic
-selenium
-webdriver-manager
-gunicorn
 uvicorn
+facebook-page-info-scraper==1.1.4
