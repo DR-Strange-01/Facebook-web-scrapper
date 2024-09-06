@@ -1,2 +1,3 @@
 # Facebook-web-scrapper
-API of facebook fetch subscriber count of public profiles
+
+FastAPI of facebook to fetch subscriber count of public profiles
